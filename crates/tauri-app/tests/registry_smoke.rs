@@ -6,7 +6,7 @@ use tauri_app::ProfileRegistry;
 
 #[test]
 fn about_uses_released_app_version() {
-    assert_eq!(env!("CARGO_PKG_VERSION"), "1.1.0");
+    assert_eq!(env!("CARGO_PKG_VERSION"), "1.1.1");
 }
 
 #[tokio::test]

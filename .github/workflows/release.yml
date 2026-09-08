@@ -58,6 +58,9 @@ jobs:
             libayatana-appindicator3-dev \
             libfuse2
 
+      - name: Test browser launch arguments
+        run: cargo test --locked -p browser-launcher --test args
+
       - uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

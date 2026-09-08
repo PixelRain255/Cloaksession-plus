@@ -143,10 +143,32 @@ fn device_memory_api_value_clamps() {
 }
 
 #[test]
-fn cloak_storage_quota_clears_browser_scan_private_mode_heuristic() {
-    let p = base_profile();
-    let args = build_cloak_fingerprint_args(&p.id, &p.fingerprint);
-    assert!(args.iter().any(|a| a == "--fingerprint-storage-quota=16384"));
+fn cloak_default_storage_quota_is_two_gb() {
+    let mut p = base_profile();
+    p.fingerprint = profile_manager::fingerprint::default_fingerprint("abc");
+    assert_eq!(p.fingerprint.storage_quota, Some(2_000_000_000));
+    let args = build_spawn_args(&p, BrowserEngine::Cloakbrowser, 9222, "/tmp/p1", None, None, None);
+    assert!(args.iter().any(|a| a == "--fingerprint-storage-quota=2000000000"));
+}
+
+#[test]
+fn cloak_storage_quota_preserves_custom_values_in_bytes() {
+    let mut p = base_profile();
+    for bytes in [500_000_000, 3_210_000_000, 32_000_000_000] {
+        p.fingerprint.storage_quota = Some(bytes);
+        let args = build_cloak_fingerprint_args(&p.id, &p.fingerprint);
+        assert!(args.contains(&format!("--fingerprint-storage-quota={bytes}")));
+    }
+}
+
+#[test]
+fn cloak_storage_quota_unset_or_zero_uses_engine_default() {
+    let mut p = base_profile();
+    for quota in [None, Some(0)] {
+        p.fingerprint.storage_quota = quota;
+        let args = build_cloak_fingerprint_args(&p.id, &p.fingerprint);
+        assert!(args.iter().all(|a| !a.starts_with("--fingerprint-storage-quota=")));
+    }
 }
 
 #[test]

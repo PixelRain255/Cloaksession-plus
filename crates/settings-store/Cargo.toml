@@ -2,6 +2,7 @@
 name = "settings-store"
 version = "0.1.0"
 edition = "2021"
+license.workspace = true
 
 [dependencies]
 multizen-core = { path = "../multizen-core" }
