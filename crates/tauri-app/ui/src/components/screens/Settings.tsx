@@ -86,7 +86,7 @@ export function Settings({ onImport }: Props): JSX.Element {
   }
 
   return (
-    <div className="flex-1 overflow-auto" style={{ padding: "24px 32px" }}>
+    <div className="roxy-screen flex-1 overflow-auto" style={{ padding: "24px 32px" }}>
       <div className="max-w-[720px] mx-auto">
         <div className="text-lg font-bold tracking-tight text-slate-100 mb-1.5">Settings</div>
         <div className="text-[13px] text-slate-500 mb-5">
@@ -372,8 +372,12 @@ const engineOptions: Array<{
     label: "Chrome for Testing",
     description: "Compatibility fallback using Google's official automation build.",
   },
+  {
+    value: "chromix",
+    label: "Chromix",
+    description: "Chromium 152 runtime with standard CDP and profile isolation.",
+  },
 ];
-
 function updateLabel(status: UpdateStatus | null): string {
   switch (status?.kind) {
     case "checking":

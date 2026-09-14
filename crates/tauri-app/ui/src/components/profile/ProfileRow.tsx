@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type JSX } from "react";
+import { useEffect, useRef, useState, type JSX, type MouseEvent, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { ChevronRight, Loader2, MoreHorizontal, Play, RefreshCw, Square, CheckSquare, Zap } from "lucide-react";
 import {
@@ -60,7 +60,7 @@ export function ProfileRow({
   const [pending, setPending] = useState(false);
   useEffect(() => setPending(false), [profile.isRunning]);
 
-  async function handleLaunch(e: React.MouseEvent): Promise<void> {
+  async function handleLaunch(e: MouseEvent): Promise<void> {
     e.stopPropagation();
     if (pending) return;
     setPending(true);
@@ -72,7 +72,7 @@ export function ProfileRow({
     window.setTimeout(() => setPending(false), 5000);
   }
 
-  async function handleStop(e: React.MouseEvent): Promise<void> {
+  async function handleStop(e: MouseEvent): Promise<void> {
     e.stopPropagation();
     if (pending) return;
     setPending(true);
@@ -86,8 +86,16 @@ export function ProfileRow({
 
   return (
     <div
-      role="row"
+      tabIndex={0}
+      aria-selected={selected}
       onClick={onOpen}
+      onKeyDown={(e) => {
+        if (e.target !== e.currentTarget) return;
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onOpen();
+        }
+      }}
       className="group grid items-center gap-3 px-4 py-2.5 cursor-pointer transition-colors hover:bg-white/[0.025]"
       style={{
         gridTemplateColumns: PROFILE_TABLE_GRID_TEMPLATE,
@@ -180,7 +188,7 @@ export function ProfileRow({
       <div
         className={cn(
           "flex items-center justify-end gap-1.5 transition-opacity",
-          isRunning || terminating ? "opacity-100" : "opacity-0 group-hover:opacity-100",
+          isRunning || terminating ? "opacity-100" : "opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto group-focus-within:opacity-100 group-focus-within:pointer-events-auto",
         )}
       >
         {terminating ? (
@@ -338,6 +346,14 @@ function RowMenu({
       window.removeEventListener("resize", close);
     };
   }, [open]);
+  useEffect(() => {
+    if (!open) return;
+    const closeOnEscape = (event: KeyboardEvent): void => {
+      if (event.key === "Escape") setOpen(false);
+    };
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [open]);
 
   return (
     <>
@@ -350,6 +366,8 @@ function RowMenu({
           setOpen((v) => !v);
         }}
         aria-label="More actions"
+        aria-haspopup="menu"
+        aria-expanded={open}
         style={{ width: 28, height: 28 }}
       >
         <MoreHorizontal size={13} strokeWidth={1.5} />
@@ -359,9 +377,18 @@ function RowMenu({
           <>
             <div
               className="fixed inset-0 z-[60]"
-              onMouseDown={() => setOpen(false)}
+              onMouseDown={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setOpen(false);
+              }}
+              onClick={(e) => {
+                e.stopPropagation();
+                setOpen(false);
+              }}
             />
             <div
+              role="menu"
               className="fixed z-[61] w-44 py-1 rounded-md"
               // Belt-and-suspenders: contain ALL clicks inside the menu panel
               // (padding, the separator band, future children) so a slight
@@ -401,7 +428,7 @@ function MenuItem({
   onClick,
   tone,
 }: {
-  children: React.ReactNode;
+  children: ReactNode;
   onClick: () => void;
   tone?: "danger";
 }): JSX.Element {

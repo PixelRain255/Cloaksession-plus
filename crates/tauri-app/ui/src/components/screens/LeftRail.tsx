@@ -46,6 +46,8 @@ export function LeftRail({ active, onChange, onCmdK }: Props): JSX.Element {
               title={`${it.label} · ⌘${it.kbd}`}
               onClick={() => onChange(it.id)}
               className={cn("roxy-nav-item", isActive && "is-active")}
+              aria-current={isActive ? "page" : undefined}
+              aria-label={it.label}
             >
               <Icon size={16} strokeWidth={1.7} />
               <span className="min-w-0 flex-1 text-left">
@@ -58,7 +60,7 @@ export function LeftRail({ active, onChange, onCmdK }: Props): JSX.Element {
         })}
       </nav>
       <div className="flex-1" />
-      <button type="button" title="Command palette · ⌘K" onClick={onCmdK} className="roxy-command-button">
+      <button type="button" title="Command palette · ⌘K" aria-label="Command palette" onClick={onCmdK} className="roxy-command-button">
         <Command size={15} strokeWidth={1.7} />
         <span className="roxy-nav-label">Command palette</span>
         <span className="roxy-nav-key mono text-[10px]">⌘K</span>

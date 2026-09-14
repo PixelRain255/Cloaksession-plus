@@ -193,7 +193,7 @@ export interface LaunchedProfile {
 // Settings (crates/multizen-core/src/settings.rs)
 // ---------------------------------------------------------------------------
 
-export type BrowserEngine = "cft" | "cloakbrowser";
+export type BrowserEngine = "cft" | "cloakbrowser" | "chromix";
 
 export interface AppSettings {
   theme: string;

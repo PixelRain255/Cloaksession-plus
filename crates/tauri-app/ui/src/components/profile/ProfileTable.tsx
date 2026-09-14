@@ -8,7 +8,7 @@ interface Props {
   /** Profiles in the terminating phase (winding down, not yet exited). */
   closingIds?: Set<string>;
   selectedIds: Set<string>;
-  allVisibleSelected: boolean;
+  selectedVisibleCount: number;
   onToggleAll: () => void;
   onToggle: (id: string) => void;
   onSelect: (id: string) => void;
@@ -39,7 +39,7 @@ export function ProfileTable({
   profiles,
   closingIds,
   selectedIds,
-  allVisibleSelected,
+  selectedVisibleCount,
   onToggleAll,
   onToggle,
   onSelect,
@@ -51,7 +51,6 @@ export function ProfileTable({
   return (
     <div className="roxy-table-shell">
       <div
-        role="rowheader"
         className="grid items-center gap-3 px-4 py-2 sticky top-0 z-10"
         style={{
           gridTemplateColumns: PROFILE_TABLE_GRID_TEMPLATE,
@@ -71,10 +70,10 @@ export function ProfileTable({
                 type="button"
                 className="roxy-checkbox"
                 onClick={onToggleAll}
-                aria-label={allVisibleSelected ? "Clear all selected profiles" : "Select all visible profiles"}
-                title={allVisibleSelected ? "Clear all" : "Select all"}
+                aria-label={selectedVisibleCount === profiles.length ? "Clear all selected profiles" : "Select all visible profiles"}
+                title={selectedVisibleCount === profiles.length ? "Clear all" : "Select all"}
               >
-                {allVisibleSelected ? <CheckSquare size={14} /> : selectedIds.size > 0 ? <Minus size={14} /> : <Square size={14} />}
+                {selectedVisibleCount === profiles.length ? <CheckSquare size={14} /> : selectedVisibleCount > 0 ? <Minus size={14} /> : <Square size={14} />}
               </button>
             ) : (
               c.label

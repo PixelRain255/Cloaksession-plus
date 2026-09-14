@@ -23,7 +23,7 @@ export function McpPanel({ events, profiles, mcpUrl, mcpToken }: Props): JSX.Ele
   const recent = useMemo(() => events.slice().reverse(), [events]);
 
   return (
-    <div className="flex-1 overflow-auto" style={{ padding: "24px 32px" }}>
+    <div className="roxy-screen flex-1 overflow-auto" style={{ padding: "24px 32px" }}>
       <div className="max-w-[960px] mx-auto">
         <div className="flex items-baseline gap-3 mb-1.5">
           <div className="text-lg font-bold tracking-tight text-slate-100">MCP</div>

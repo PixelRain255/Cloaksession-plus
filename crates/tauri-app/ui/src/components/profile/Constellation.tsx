@@ -1,4 +1,4 @@
-import { useMemo, useState, type JSX } from "react";
+import { useEffect, useMemo, useState, type JSX } from "react";
 import { CheckSquare, Grid3x3, List, Play, Search, Square, X } from "lucide-react";
 import type { ProfileSummary, ActivityEvent } from "../../types";
 import { Kbd } from "../atoms";
@@ -63,6 +63,7 @@ export function Constellation({
   const [query, setQuery] = useState("");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [viewMode, setViewMode] = usePersistedState<ViewMode>("profilesView", "list");
+  const [batchPending, setBatchPending] = useState(false);
 
   const tileData: TileData[] = useMemo(
     () =>
@@ -102,8 +103,23 @@ export function Constellation({
 
   const visibleIds = filtered.map((profile) => profile.id);
   const selectedVisibleIds = visibleIds.filter((id) => selectedIds.has(id));
+  useEffect(() => {
+    setSelectedIds((previous) => {
+      const visible = new Set(visibleIds);
+      const next = new Set(Array.from(previous).filter((id) => visible.has(id)));
+      return next.size === previous.size ? previous : next;
+    });
+  }, [visibleIds.join("|")]);
   const allVisibleSelected = visibleIds.length > 0 && selectedVisibleIds.length === visibleIds.length;
   const aiCount = counts.ai;
+
+  const selectedLaunchIds = selectedVisibleIds.filter((id) => tileData.find((profile) => profile.id === id)?.state === "idle");
+  const selectedStopIds = selectedVisibleIds.filter((id) => tileData.find((profile) => profile.id === id)?.state !== "idle");
+
+  function changeViewMode(next: ViewMode): void {
+    setViewMode(next);
+    if (next === "grid") setSelectedIds(new Set());
+  }
 
   function toggleSelected(id: string): void {
     setSelectedIds((previous) => {
@@ -124,13 +140,25 @@ export function Constellation({
   }
 
   async function launchSelected(): Promise<void> {
-    await onBulkLaunch(selectedVisibleIds);
-    setSelectedIds(new Set());
+    if (batchPending || selectedLaunchIds.length === 0) return;
+    setBatchPending(true);
+    try {
+      await onBulkLaunch(selectedLaunchIds);
+      setSelectedIds(new Set());
+    } finally {
+      setBatchPending(false);
+    }
   }
 
   async function stopSelected(): Promise<void> {
-    await onBulkStop(selectedVisibleIds);
-    setSelectedIds(new Set());
+    if (batchPending || selectedStopIds.length === 0) return;
+    setBatchPending(true);
+    try {
+      await onBulkStop(selectedStopIds);
+      setSelectedIds(new Set());
+    } finally {
+      setBatchPending(false);
+    }
   }
 
   return (
@@ -150,7 +178,7 @@ export function Constellation({
           <div className="roxy-view-switch" aria-label="Profile view">
             <button
               type="button"
-              onClick={() => setViewMode("list")}
+              onClick={() => changeViewMode("list")}
               className={cn("roxy-icon-button", viewMode === "list" && "is-active")}
               title="List view"
               aria-label="List view"
@@ -159,7 +187,7 @@ export function Constellation({
             </button>
             <button
               type="button"
-              onClick={() => setViewMode("grid")}
+              onClick={() => changeViewMode("grid")}
               className={cn("roxy-icon-button", viewMode === "grid" && "is-active")}
               title="Grid view"
               aria-label="Grid view"
@@ -200,6 +228,7 @@ export function Constellation({
                 type="button"
                 onClick={() => setFilter(c.id)}
                 className={cn("roxy-filter-chip", isActive && "is-active")}
+                aria-pressed={isActive}
               >
                 {c.kind && <span className="roxy-status-dot" style={{ background: DOT_COLOR[c.kind] }} />}
                 {c.label}
@@ -235,10 +264,10 @@ export function Constellation({
             <button type="button" className="roxy-link-button" onClick={() => setSelectedIds(new Set())}>Clear</button>
           </div>
           <div className="flex items-center gap-1.5">
-            <button type="button" className="roxy-batch-button" onClick={() => void launchSelected()} title="Launch selected">
+            <button type="button" className="roxy-batch-button" onClick={() => void launchSelected()} disabled={batchPending || selectedLaunchIds.length === 0} title="Launch selected">
               <Play size={12} fill="currentColor" /> Launch selected
             </button>
-            <button type="button" className="roxy-batch-button" onClick={() => void stopSelected()} title="Stop selected">
+            <button type="button" className="roxy-batch-button" onClick={() => void stopSelected()} disabled={batchPending || selectedStopIds.length === 0} title="Stop selected">
               <Square size={11} fill="currentColor" /> Stop selected
             </button>
           </div>
@@ -256,7 +285,7 @@ export function Constellation({
             profiles={filtered}
             closingIds={closingIds}
             selectedIds={selectedIds}
-            allVisibleSelected={allVisibleSelected}
+            selectedVisibleCount={selectedVisibleIds.length}
             onToggleAll={toggleAllVisible}
             onToggle={toggleSelected}
             onSelect={onSelect}
