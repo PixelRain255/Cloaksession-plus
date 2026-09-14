@@ -8,13 +8,14 @@ interface Item {
   id: Section;
   icon: typeof Boxes;
   label: string;
+  description: string;
   kbd: string;
 }
 
 const ITEMS: Item[] = [
-  { id: "profiles", icon: Boxes, label: "Profiles", kbd: "1" },
-  { id: "mcp", icon: Plug, label: "MCP", kbd: "2" },
-  { id: "settings", icon: Settings, label: "Settings", kbd: "," },
+  { id: "profiles", icon: Boxes, label: "Profiles", description: "Browser workspaces", kbd: "1" },
+  { id: "mcp", icon: Plug, label: "MCP control", description: "Agent connections", kbd: "2" },
+  { id: "settings", icon: Settings, label: "Settings", description: "Runtime and data", kbd: "," },
 ];
 
 interface Props {
@@ -25,45 +26,43 @@ interface Props {
 
 export function LeftRail({ active, onChange, onCmdK }: Props): JSX.Element {
   return (
-    <div
-      className="flex flex-col items-center pt-3.5 gap-1.5 flex-shrink-0"
-      style={{
-        width: 56,
-        background: "rgba(255,255,255,0.01)",
-        borderRight: "1px solid rgba(255,255,255,0.04)",
-      }}
-    >
-      {ITEMS.map((it) => {
-        const Icon = it.icon;
-        const isActive = active === it.id;
-        return (
-          <button
-            key={it.id}
-            type="button"
-            title={`${it.label} · ⌘${it.kbd}`}
-            onClick={() => onChange(it.id)}
-            className={cn(
-              "w-9 h-9 rounded-[10px] flex items-center justify-center transition-colors",
-              isActive ? "text-purple-300" : "text-slate-500 hover:text-slate-200 hover:bg-white/5",
-            )}
-            style={{
-              background: isActive ? "rgba(168,85,247,0.12)" : undefined,
-              boxShadow: isActive ? "inset 0 0 0 1px rgba(168,85,247,0.25)" : undefined,
-            }}
-          >
-            <Icon size={16} strokeWidth={1.5} />
-          </button>
-        );
-      })}
+    <aside className="roxy-rail flex flex-col flex-shrink-0">
+      <div className="roxy-rail-context">
+        <span className="roxy-rail-mark">C</span>
+        <div>
+          <div className="text-[12px] font-semibold text-slate-100">Cloaksession</div>
+          <div className="mono text-[9px] text-slate-600 uppercase tracking-widest">Browser ops</div>
+        </div>
+      </div>
+      <div className="roxy-rail-label">Workspace</div>
+      <nav className="flex flex-col gap-1" aria-label="Workspace navigation">
+        {ITEMS.map((it) => {
+          const Icon = it.icon;
+          const isActive = active === it.id;
+          return (
+            <button
+              key={it.id}
+              type="button"
+              title={`${it.label} · ⌘${it.kbd}`}
+              onClick={() => onChange(it.id)}
+              className={cn("roxy-nav-item", isActive && "is-active")}
+            >
+              <Icon size={16} strokeWidth={1.7} />
+              <span className="min-w-0 flex-1 text-left">
+                <span className="roxy-nav-label block text-[12px] font-medium">{it.label}</span>
+                <span className="roxy-nav-description block text-[10px] text-slate-600">{it.description}</span>
+              </span>
+              <span className="roxy-nav-key mono text-[10px]">{it.kbd}</span>
+            </button>
+          );
+        })}
+      </nav>
       <div className="flex-1" />
-      <button
-        type="button"
-        title="Command palette · ⌘K"
-        onClick={onCmdK}
-        className="mb-3.5 w-9 h-9 rounded-[10px] flex items-center justify-center text-slate-600 hover:text-slate-300 hover:bg-white/5 transition-colors"
-      >
-        <Command size={16} strokeWidth={1.5} />
+      <button type="button" title="Command palette · ⌘K" onClick={onCmdK} className="roxy-command-button">
+        <Command size={15} strokeWidth={1.7} />
+        <span className="roxy-nav-label">Command palette</span>
+        <span className="roxy-nav-key mono text-[10px]">⌘K</span>
       </button>
-    </div>
+    </aside>
   );
 }

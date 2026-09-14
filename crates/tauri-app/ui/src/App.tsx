@@ -283,6 +283,16 @@ export function App(): JSX.Element {
     await refresh();
   }
 
+  async function bulkLaunchProfiles(ids: string[]): Promise<void> {
+    await Promise.all(ids.map((id) => launchProfile(id)));
+    await refresh();
+  }
+
+  async function bulkStopProfiles(ids: string[]): Promise<void> {
+    await Promise.all(ids.map((id) => closeProfile(id)));
+    await refresh();
+  }
+
   async function importProfile(passphrase: string): Promise<void> {
     setModal({ kind: "none" });
     const result = await profilesApi.importArchive(passphrase);
@@ -421,6 +431,8 @@ export function App(): JSX.Element {
                   onCreate={() => setShowSheet(true)}
                   onLaunch={launchProfile}
                   onStop={closeProfile}
+                  onBulkLaunch={bulkLaunchProfiles}
+                  onBulkStop={bulkStopProfiles}
                   onExport={(id) => setModal({ kind: "export-passphrase", profileId: id })}
                   onDelete={(id) => setModal({ kind: "delete-confirm", profileId: id })}
                 />

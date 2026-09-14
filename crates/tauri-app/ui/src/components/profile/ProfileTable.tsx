@@ -1,3 +1,4 @@
+import { CheckSquare, Minus, Square } from "lucide-react";
 import type { JSX } from "react";
 import { ProfileRow } from "./ProfileRow";
 import type { TileData } from "./ProfileTile";
@@ -6,6 +7,10 @@ interface Props {
   profiles: TileData[];
   /** Profiles in the terminating phase (winding down, not yet exited). */
   closingIds?: Set<string>;
+  selectedIds: Set<string>;
+  allVisibleSelected: boolean;
+  onToggleAll: () => void;
+  onToggle: (id: string) => void;
   onSelect: (id: string) => void;
   onLaunch: (id: string) => Promise<void> | void;
   onStop: (id: string) => Promise<void> | void;
@@ -15,12 +20,13 @@ interface Props {
 
 /**
  * Single source of truth for the table grid. Both header and rows use this
- * exact template — that's the only way to keep them aligned.
+ * exact template so the dense workspace stays aligned at desktop widths.
  */
 export const PROFILE_TABLE_GRID_TEMPLATE =
-  "minmax(220px, 1.5fr) 110px minmax(140px, 1fr) 100px minmax(160px, 1fr) 120px";
+  "34px minmax(220px, 1.5fr) 110px minmax(140px, 1fr) 100px minmax(160px, 1fr) 120px";
 
 const COLUMNS: ReadonlyArray<{ label: string; align?: "left" | "right" }> = [
+  { label: "", align: "left" },
   { label: "Name" },
   { label: "Status" },
   { label: "Tags" },
@@ -32,6 +38,10 @@ const COLUMNS: ReadonlyArray<{ label: string; align?: "left" | "right" }> = [
 export function ProfileTable({
   profiles,
   closingIds,
+  selectedIds,
+  allVisibleSelected,
+  onToggleAll,
+  onToggle,
   onSelect,
   onLaunch,
   onStop,
@@ -39,20 +49,13 @@ export function ProfileTable({
   onDelete,
 }: Props): JSX.Element {
   return (
-    <div
-      className="rounded-xl overflow-hidden"
-      style={{
-        background: "rgba(255,255,255,0.02)",
-        boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.05)",
-      }}
-    >
-      {/* Header */}
+    <div className="roxy-table-shell">
       <div
         role="rowheader"
         className="grid items-center gap-3 px-4 py-2 sticky top-0 z-10"
         style={{
           gridTemplateColumns: PROFILE_TABLE_GRID_TEMPLATE,
-          background: "rgba(10,11,15,0.92)",
+          background: "rgba(10,11,15,0.94)",
           backdropFilter: "blur(12px)",
           borderBottom: "1px solid rgba(255,255,255,0.06)",
         }}
@@ -63,7 +66,19 @@ export function ProfileTable({
             className="text-[10px] font-semibold tracking-wider uppercase text-slate-600"
             style={{ textAlign: c.align ?? "left" }}
           >
-            {c.label}
+            {i === 0 ? (
+              <button
+                type="button"
+                className="roxy-checkbox"
+                onClick={onToggleAll}
+                aria-label={allVisibleSelected ? "Clear all selected profiles" : "Select all visible profiles"}
+                title={allVisibleSelected ? "Clear all" : "Select all"}
+              >
+                {allVisibleSelected ? <CheckSquare size={14} /> : selectedIds.size > 0 ? <Minus size={14} /> : <Square size={14} />}
+              </button>
+            ) : (
+              c.label
+            )}
           </div>
         ))}
       </div>
@@ -73,6 +88,8 @@ export function ProfileTable({
           key={p.id}
           profile={p}
           terminating={closingIds?.has(p.id) ?? false}
+          selected={selectedIds.has(p.id)}
+          onToggle={() => onToggle(p.id)}
           onOpen={() => onSelect(p.id)}
           onLaunch={() => onLaunch(p.id)}
           onStop={() => onStop(p.id)}

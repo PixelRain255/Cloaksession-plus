@@ -1,5 +1,5 @@
 import { useMemo, useState, type JSX } from "react";
-import { Grid3x3, List, Plus } from "lucide-react";
+import { CheckSquare, Grid3x3, List, Play, Search, Square, X } from "lucide-react";
 import type { ProfileSummary, ActivityEvent } from "../../types";
 import { Kbd } from "../atoms";
 import { ProfileTile, deriveTileState, type TileData, type TileState } from "./ProfileTile";
@@ -39,6 +39,8 @@ interface Props {
   onCreate: () => void;
   onLaunch: (id: string) => void;
   onStop: (id: string) => void;
+  onBulkLaunch: (ids: string[]) => Promise<void>;
+  onBulkStop: (ids: string[]) => Promise<void>;
   onExport: (id: string) => void;
   onDelete: (id: string) => void;
 }
@@ -51,12 +53,16 @@ export function Constellation({
   onCreate,
   onLaunch,
   onStop,
+  onBulkLaunch,
+  onBulkStop,
   onExport,
   onDelete,
 }: Props): JSX.Element {
   const [filter, setFilter] = useState<FilterChip["id"]>("all");
   const [activeTag, setActiveTag] = useState<string | null>(null);
-  const [viewMode, setViewMode] = usePersistedState<ViewMode>("profilesView", "grid");
+  const [query, setQuery] = useState("");
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [viewMode, setViewMode] = usePersistedState<ViewMode>("profilesView", "list");
 
   const tileData: TileData[] = useMemo(
     () =>
@@ -80,149 +86,179 @@ export function Constellation({
   }, [profiles]);
 
   const filtered = useMemo(() => {
+    const normalizedQuery = query.trim().toLowerCase();
     return tileData.filter((t) => {
       if (filter !== "all" && t.state !== filter) return false;
       if (activeTag && !t.tags.includes(activeTag)) return false;
+      if (
+        normalizedQuery &&
+        ![t.name, t.id, ...t.tags].some((value) => value.toLowerCase().includes(normalizedQuery))
+      ) {
+        return false;
+      }
       return true;
     });
-  }, [tileData, filter, activeTag]);
+  }, [tileData, filter, activeTag, query]);
 
+  const visibleIds = filtered.map((profile) => profile.id);
+  const selectedVisibleIds = visibleIds.filter((id) => selectedIds.has(id));
+  const allVisibleSelected = visibleIds.length > 0 && selectedVisibleIds.length === visibleIds.length;
   const aiCount = counts.ai;
 
+  function toggleSelected(id: string): void {
+    setSelectedIds((previous) => {
+      const next = new Set(previous);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function toggleAllVisible(): void {
+    setSelectedIds((previous) => {
+      const next = new Set(previous);
+      if (allVisibleSelected) visibleIds.forEach((id) => next.delete(id));
+      else visibleIds.forEach((id) => next.add(id));
+      return next;
+    });
+  }
+
+  async function launchSelected(): Promise<void> {
+    await onBulkLaunch(selectedVisibleIds);
+    setSelectedIds(new Set());
+  }
+
+  async function stopSelected(): Promise<void> {
+    await onBulkStop(selectedVisibleIds);
+    setSelectedIds(new Set());
+  }
+
   return (
-    <div className="flex-1 flex flex-col min-w-0 min-h-0">
-      {/* Title row */}
-      <div className="flex items-center gap-3.5 px-6 pt-4 pb-3">
-        <div className="text-lg font-bold tracking-tight text-slate-100">All profiles</div>
-        <div className="mono text-[11px] text-slate-600">
-          ·  {profiles.length} total · {counts.running + counts.ai} running
-          {aiCount > 0 && ` · ${aiCount} driven by Claude`}
+    <div className="flex-1 flex flex-col min-w-0 min-h-0 roxy-workspace">
+      <div className="roxy-page-header">
+        <div>
+          <div className="roxy-eyebrow">Workspace / Browser profiles</div>
+          <div className="flex items-baseline gap-3">
+            <div className="text-lg font-bold tracking-tight text-slate-100">All profiles</div>
+            <div className="mono text-[11px] text-slate-600">
+              {profiles.length} total · {counts.running + counts.ai} running
+              {aiCount > 0 && ` · ${aiCount} driven by Claude`}
+            </div>
+          </div>
         </div>
-        <div className="flex-1" />
-        <div
-          className="flex gap-1 p-[3px] rounded-lg"
-          style={{
-            background: "rgba(255,255,255,0.03)",
-            boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.06)",
-          }}
-        >
-          <button
-            type="button"
-            onClick={() => setViewMode("grid")}
-            className={cn(
-              "w-7 h-6 rounded-md flex items-center justify-center transition-colors",
-              viewMode === "grid"
-                ? "text-slate-100"
-                : "text-slate-500 hover:text-slate-300",
-            )}
-            style={{
-              background: viewMode === "grid" ? "rgba(255,255,255,0.06)" : undefined,
-            }}
-            title="Grid view"
-          >
-            <Grid3x3 size={13} strokeWidth={1.5} />
-          </button>
-          <button
-            type="button"
-            onClick={() => setViewMode("list")}
-            className={cn(
-              "w-7 h-6 rounded-md flex items-center justify-center transition-colors",
-              viewMode === "list"
-                ? "text-slate-100"
-                : "text-slate-500 hover:text-slate-300",
-            )}
-            style={{
-              background: viewMode === "list" ? "rgba(255,255,255,0.06)" : undefined,
-            }}
-            title="List view"
-          >
-            <List size={13} strokeWidth={1.5} />
+        <div className="flex items-center gap-2">
+          <div className="roxy-view-switch" aria-label="Profile view">
+            <button
+              type="button"
+              onClick={() => setViewMode("list")}
+              className={cn("roxy-icon-button", viewMode === "list" && "is-active")}
+              title="List view"
+              aria-label="List view"
+            >
+              <List size={14} strokeWidth={1.8} />
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode("grid")}
+              className={cn("roxy-icon-button", viewMode === "grid" && "is-active")}
+              title="Grid view"
+              aria-label="Grid view"
+            >
+              <Grid3x3 size={14} strokeWidth={1.8} />
+            </button>
+          </div>
+          <button type="button" onClick={onCreate} className="btn-brand roxy-primary-action rounded-[7px] text-[12px] px-3 py-[7px]">
+            <span className="text-base leading-none">+</span>
+            New profile
+            <Kbd variant="on-brand">⌘ N</Kbd>
           </button>
         </div>
-        <button
-          type="button"
-          onClick={onCreate}
-          className="btn-brand rounded-[9px] text-[12px] px-3 py-[7px]"
-        >
-          <Plus size={12} strokeWidth={2} />
-          New profile
-          <Kbd variant="on-brand">⌘ N</Kbd>
-        </button>
       </div>
 
-      {/* Filter row */}
-      <div className="flex items-center gap-1.5 px-6 pb-3.5 flex-wrap">
-        {FILTERS.map((c) => {
-          const isActive = filter === c.id;
-          return (
-            <button
-              key={c.id}
-              type="button"
-              onClick={() => setFilter(c.id)}
-              className={cn(
-                "flex items-center gap-1.5 px-2.5 py-[5px] rounded-lg text-[12px] font-medium transition-colors",
-                isActive ? "text-slate-100" : "text-slate-500 hover:text-slate-300",
-              )}
-              style={{
-                background: isActive ? "rgba(255,255,255,0.06)" : undefined,
-                boxShadow: isActive ? "inset 0 0 0 1px rgba(255,255,255,0.08)" : undefined,
-              }}
-            >
-              {c.kind && (
-                <span
-                  className="w-[5px] h-[5px] rounded-full"
-                  style={{ background: DOT_COLOR[c.kind] }}
-                />
-              )}
-              {c.label}
-              <span className={cn("mono text-[10px]", isActive ? "text-slate-400" : "text-slate-600")}>
-                {counts[c.id]}
-              </span>
+      <div className="roxy-filterbar">
+        <label className="roxy-search-field">
+          <Search size={14} strokeWidth={1.8} />
+          <input
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Search profiles, tags, or IDs"
+            aria-label="Search profiles"
+          />
+          {query && (
+            <button type="button" onClick={() => setQuery("")} aria-label="Clear search" title="Clear search">
+              <X size={13} />
             </button>
-          );
-        })}
-
+          )}
+        </label>
+        <div className="roxy-filter-divider" />
+        <div className="flex items-center gap-1.5 flex-wrap">
+          {FILTERS.map((c) => {
+            const isActive = filter === c.id;
+            return (
+              <button
+                key={c.id}
+                type="button"
+                onClick={() => setFilter(c.id)}
+                className={cn("roxy-filter-chip", isActive && "is-active")}
+              >
+                {c.kind && <span className="roxy-status-dot" style={{ background: DOT_COLOR[c.kind] }} />}
+                {c.label}
+                <span className="mono text-[10px] opacity-60">{counts[c.id]}</span>
+              </button>
+            );
+          })}
+        </div>
         {allTags.length > 0 && (
           <>
-            <div className="w-px h-4 bg-white/[0.06] mx-1.5" />
-            {allTags.map((t) => {
-              const isActive = activeTag === t;
-              return (
+            <div className="roxy-filter-divider" />
+            <div className="flex items-center gap-1.5 flex-wrap">
+              {allTags.map((tag) => (
                 <button
-                  key={t}
+                  key={tag}
                   type="button"
-                  onClick={() => setActiveTag(isActive ? null : t)}
-                  className={cn(
-                    "mz-pill mono cursor-pointer transition-colors",
-                    isActive ? "text-purple-300" : "text-slate-500 hover:text-slate-300",
-                  )}
-                  style={{
-                    background: isActive ? "rgba(168,85,247,0.10)" : "rgba(255,255,255,0.03)",
-                    boxShadow: isActive
-                      ? "inset 0 0 0 1px rgba(168,85,247,0.25)"
-                      : "inset 0 0 0 1px rgba(255,255,255,0.05)",
-                  }}
+                  onClick={() => setActiveTag(activeTag === tag ? null : tag)}
+                  className={cn("roxy-tag-chip", activeTag === tag && "is-active")}
                 >
-                  {t}
+                  {tag}
                 </button>
-              );
-            })}
+              ))}
+            </div>
           </>
         )}
       </div>
 
-      {/* Body — grid or list. `pt-3` keeps the running/AI glow from
-          getting clipped against the top edge of the scroll container
-          (box-shadow extends ~32px outside the tile). */}
+      {selectedVisibleIds.length > 0 && (
+        <div className="roxy-selectionbar">
+          <div className="flex items-center gap-2 text-[12px] text-slate-300">
+            <CheckSquare size={14} className="text-teal-300" />
+            <span>{selectedVisibleIds.length} selected</span>
+            <button type="button" className="roxy-link-button" onClick={() => setSelectedIds(new Set())}>Clear</button>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <button type="button" className="roxy-batch-button" onClick={() => void launchSelected()} title="Launch selected">
+              <Play size={12} fill="currentColor" /> Launch selected
+            </button>
+            <button type="button" className="roxy-batch-button" onClick={() => void stopSelected()} title="Stop selected">
+              <Square size={11} fill="currentColor" /> Stop selected
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="flex-1 overflow-auto px-6 pb-6 pt-3">
         {filtered.length === 0 ? (
-          <div className="text-sm text-slate-500 py-12 text-center">
-            No profiles match the current filter.
+          <div className="roxy-empty-state">
+            <div className="text-sm text-slate-300">No profiles match the current view.</div>
+            <div className="text-[12px] text-slate-600 mt-1">Adjust the search or filters, or create a new browser profile.</div>
           </div>
         ) : viewMode === "list" ? (
           <ProfileTable
             profiles={filtered}
             closingIds={closingIds}
+            selectedIds={selectedIds}
+            allVisibleSelected={allVisibleSelected}
+            onToggleAll={toggleAllVisible}
+            onToggle={toggleSelected}
             onSelect={onSelect}
             onLaunch={onLaunch}
             onStop={onStop}
@@ -230,12 +266,7 @@ export function Constellation({
             onDelete={onDelete}
           />
         ) : (
-          <div
-            className="grid gap-3.5"
-            style={{
-              gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
-            }}
-          >
+          <div className="grid gap-3.5" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))" }}>
             {filtered.map((p) => (
               <ProfileTile
                 key={p.id}

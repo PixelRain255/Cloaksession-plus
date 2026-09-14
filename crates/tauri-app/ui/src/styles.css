@@ -292,3 +292,316 @@
   height: 13px;
   vertical-align: -2px;
 }
+
+/* Roxy-style operations workspace */
+.roxy-rail {
+  width: 188px;
+  padding: 14px 10px 12px;
+  gap: 12px;
+  background: #101216;
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
+}
+.roxy-rail-context {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 2px 8px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+.roxy-rail-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+  color: #071312;
+  background: #55c9b8;
+  font-weight: 800;
+  font-size: 13px;
+}
+.roxy-rail-label {
+  padding: 0 8px;
+  color: #5f6876;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+.roxy-nav-item,
+.roxy-command-button {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 40px;
+  gap: 10px;
+  padding: 6px 9px;
+  border: 0;
+  border-radius: 7px;
+  color: #6f7888;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  transition: background 140ms ease, color 140ms ease;
+}
+.roxy-nav-item:hover,
+.roxy-command-button:hover {
+  color: #dbe4ea;
+  background: rgba(255, 255, 255, 0.045);
+}
+.roxy-nav-item.is-active {
+  color: #8be2d2;
+  background: rgba(85, 201, 184, 0.11);
+  box-shadow: inset 0 0 0 1px rgba(85, 201, 184, 0.2);
+}
+.roxy-nav-item.is-active .roxy-nav-description,
+.roxy-nav-item.is-active .roxy-nav-key {
+  color: rgba(139, 226, 210, 0.58);
+}
+.roxy-nav-key {
+  color: #505968;
+  flex-shrink: 0;
+}
+.roxy-command-button {
+  min-height: 34px;
+  color: #667080;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 0;
+  padding-top: 13px;
+}
+.roxy-workspace {
+  background: #0d0f13;
+}
+.roxy-page-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 24px 24px 15px;
+}
+.roxy-eyebrow {
+  margin-bottom: 7px;
+  color: #5f6876;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+.roxy-filterbar {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  flex-wrap: wrap;
+  padding: 0 24px 13px;
+}
+.roxy-search-field {
+  display: flex;
+  align-items: center;
+  width: min(280px, 100%);
+  min-height: 31px;
+  gap: 8px;
+  padding: 0 9px;
+  color: #647083;
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+}
+.roxy-search-field:focus-within {
+  border-color: rgba(85, 201, 184, 0.55);
+  box-shadow: 0 0 0 2px rgba(85, 201, 184, 0.09);
+}
+.roxy-search-field input {
+  width: 100%;
+  min-width: 0;
+  color: #dbe4ea;
+  background: transparent;
+  border: 0;
+  outline: 0;
+  font-size: 11px;
+}
+.roxy-search-field input::placeholder {
+  color: #596271;
+}
+.roxy-search-field button {
+  display: inline-flex;
+  padding: 0;
+  color: #768091;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+.roxy-filter-divider {
+  width: 1px;
+  height: 18px;
+  background: rgba(255, 255, 255, 0.08);
+}
+.roxy-filter-chip,
+.roxy-tag-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 27px;
+  gap: 6px;
+  padding: 0 9px;
+  color: #748092;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  font-size: 11px;
+  cursor: pointer;
+}
+.roxy-filter-chip:hover,
+.roxy-tag-chip:hover,
+.roxy-filter-chip.is-active,
+.roxy-tag-chip.is-active {
+  color: #d9e4e8;
+  background: rgba(255, 255, 255, 0.055);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+.roxy-tag-chip {
+  min-height: 23px;
+  padding: 0 7px;
+  color: #647083;
+  background: rgba(255, 255, 255, 0.025);
+  font-family: var(--font-mono);
+  font-size: 10px;
+}
+.roxy-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+.roxy-view-switch {
+  display: flex;
+  gap: 2px;
+  padding: 3px;
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 6px;
+}
+.roxy-icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 24px;
+  color: #687282;
+  background: transparent;
+  border: 0;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.roxy-icon-button:hover,
+.roxy-icon-button.is-active {
+  color: #dce6e8;
+  background: rgba(255, 255, 255, 0.08);
+}
+.roxy-selectionbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 38px;
+  margin: 0 24px 2px;
+  padding: 0 10px;
+  background: rgba(85, 201, 184, 0.08);
+  border: 1px solid rgba(85, 201, 184, 0.18);
+  border-radius: 6px;
+}
+.roxy-link-button {
+  padding: 0;
+  color: #6cbeb1;
+  background: transparent;
+  border: 0;
+  font-size: 11px;
+  cursor: pointer;
+}
+.roxy-batch-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 27px;
+  padding: 0 9px;
+  color: #b9d8d4;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 5px;
+  font-size: 11px;
+  cursor: pointer;
+}
+.roxy-batch-button:hover {
+  background: rgba(85, 201, 184, 0.16);
+  border-color: rgba(85, 201, 184, 0.28);
+}
+.roxy-table-shell {
+  min-width: 940px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.065);
+  border-radius: 7px;
+}
+.roxy-table-shell > * {
+  min-width: 940px;
+}
+.roxy-checkbox {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  color: #687282;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+.roxy-checkbox:hover,
+.roxy-checkbox.is-selected {
+  color: #67d7c5;
+}
+.roxy-empty-state {
+  padding: 52px 24px;
+  text-align: center;
+  border: 1px dashed rgba(255, 255, 255, 0.1);
+  border-radius: 7px;
+}
+.roxy-primary-action,
+.btn-brand {
+  background: #287f76 !important;
+  box-shadow: 0 6px 18px -8px rgba(85, 201, 184, 0.46), inset 0 0 0 1px rgba(255, 255, 255, 0.16) !important;
+}
+@media (max-width: 900px) {
+  .roxy-rail {
+    width: 64px;
+    align-items: center;
+    padding-inline: 8px;
+  }
+  .roxy-rail-context {
+    padding-inline: 0;
+    border-bottom: 0;
+  }
+  .roxy-rail-context > div,
+  .roxy-rail-label,
+  .roxy-nav-label,
+  .roxy-nav-description {
+    display: none;
+  }
+  .roxy-nav-item,
+  .roxy-command-button {
+    justify-content: center;
+    width: 42px;
+    padding-inline: 0;
+  }
+  .roxy-nav-key {
+    display: none;
+  }
+  .roxy-page-header {
+    align-items: flex-start;
+    padding-inline: 16px;
+  }
+  .roxy-filterbar {
+    padding-inline: 16px;
+  }
+  .roxy-selectionbar {
+    margin-inline: 16px;
+  }
+}

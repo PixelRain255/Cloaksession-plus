@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type JSX } from "react";
 import { createPortal } from "react-dom";
-import { ChevronRight, Loader2, MoreHorizontal, Play, RefreshCw, Square, Zap } from "lucide-react";
+import { ChevronRight, Loader2, MoreHorizontal, Play, RefreshCw, Square, CheckSquare, Zap } from "lucide-react";
 import {
   Avatar,
   Flag,
@@ -30,6 +30,8 @@ interface Props {
   profile: TileData;
   /** Chromium winding down (window closed / Stop) but not yet exited. */
   terminating?: boolean;
+  selected: boolean;
+  onToggle: () => void;
   onOpen: () => void;
   onLaunch: () => Promise<void> | void;
   onStop: () => Promise<void> | void;
@@ -41,6 +43,8 @@ interface Props {
 export function ProfileRow({
   profile,
   terminating = false,
+  selected,
+  onToggle,
   onOpen,
   onLaunch,
   onStop,
@@ -91,6 +95,20 @@ export function ProfileRow({
       }}
     >
       {/* Name + avatar with state ring */}
+      <div className="flex items-center justify-center">
+        <button
+          type="button"
+          className={cn("roxy-checkbox", selected && "is-selected")}
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggle();
+          }}
+          aria-label={selected ? `Deselect ${profile.name}` : `Select ${profile.name}`}
+          title={selected ? "Deselect profile" : "Select profile"}
+        >
+          {selected ? <CheckSquare size={14} /> : <Square size={14} />}
+        </button>
+      </div>
       <div className="flex items-center gap-2.5 min-w-0">
         <div
           className="flex-shrink-0 rounded-[9px] p-[1.5px] transition-colors"
