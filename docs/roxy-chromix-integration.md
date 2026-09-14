@@ -56,7 +56,7 @@ cargo check --workspace
 cargo test --workspace
 ```
 
-前端当前已在本机执行 `npx tsc -b` 并通过。`npm --prefix crates/tauri-app/ui run build` 已实际执行，但 Vite 启动阶段因 Node 16 报错：`node:fs/promises` 不提供 Vite 6 使用的导出。尝试的 Node 22 便携包通过官方 SHA-256 校验，但 `node.exe --version` 以系统异常码 `-1073741819` 退出。Rust 使用 scratch Cargo `1.98.1` 实际执行过；`cargo check --workspace` 在依赖 build script 链接阶段因 `link.exe` 不存在失败。
+前端当前已在本机执行 `npx tsc -b` 并通过。`npm --prefix crates/tauri-app/ui run build` 已实际执行，但 Vite 启动阶段因 Node 16 报错：`node:fs/promises` 不提供 Vite 6 使用的导出。尝试的 Node 22 便携包通过官方 SHA-256 校验，但 `node.exe --version` 以系统异常码 `-1073741819` 退出。Rust 使用 scratch Cargo `1.98.1` 实际执行过；`cargo check --workspace` 在依赖 build script 链接阶段因 `link.exe` 不存在失败；目标测试随后因 crates.io Schannel TLS 错误无法下载 `tempfile`。
 
 真实 Chromix 原始运行时检查已在 scratch 完成，命令等价于：
 
@@ -100,7 +100,7 @@ cargo test -p cdp-driver --test integration -- --ignored
 | Roxy 风格 Profile 工作台、搜索筛选、批量启动/停止、响应式侧栏 | `b566661` | 已推送 `origin/main` |
 | Chromix 引擎配置、路径归一化、标准 CDP bootstrap 与安全策略 | `d9fb710` | 已推送 `origin/main` |
 | Settings/MCP/活动日志统一页面样式、审查修正与集成文档 | `f288288` | 已推送 `origin/main` |
-| 全量构建、测试与真实 Chromix 验证 | 原始 Chromix smoke 已通过；UI/Rust 完整构建待 Node 22 与 MSVC linker 环境 | 待完成 |
+| 全量构建、测试与真实 Chromix 验证 | `9f14e68`（文档证据） | 原始 smoke 已通过；UI/Rust 完整构建待 Node 22 与 MSVC linker 环境；push 输出已接受，后续远端查询遇 TLS 错误 |
 
 ## 变更边界
 
