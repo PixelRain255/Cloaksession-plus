@@ -56,7 +56,7 @@ cargo check --workspace
 cargo test --workspace
 ```
 
-前端当前已在本机执行 `npx tsc -b` 并通过。`npm --prefix crates/tauri-app/ui run build` 已实际执行，但 Vite 启动阶段因 Node 16 报错：`node:fs/promises` 不提供 Vite 6 使用的导出。尝试的 Node 22 便携包通过官方 SHA-256 校验，但 `node.exe --version` 以系统异常码 `-1073741819` 退出。Rust 使用 scratch Cargo `1.98.1` 实际执行过；`cargo check --workspace` 在依赖 build script 链接阶段因 `link.exe` 不存在失败；目标测试随后因 crates.io Schannel TLS 错误无法下载 `tempfile`。
+前端当前已在本机执行 `npx tsc -b` 并通过。`npm --prefix crates/tauri-app/ui run build` 已实际执行，但 Vite 启动阶段因 Node 16 报错：`node:fs/promises` 不提供 Vite 6 使用的导出。尝试的 Node 22 便携包通过官方 SHA-256 校验，但 `node.exe --version` 以系统异常码 `-1073741819` 退出。Rust 使用 scratch Cargo `1.98.1` 实际执行过；`cargo check --workspace` 在依赖 build script 链接阶段因缺少 MSVC `link.exe` 失败。随后使用 Rust 自带 `rust-lld.exe` 重试，进一步确认缺少 `kernel32.lib`、`ntdll.lib`、`userenv.lib`、`ws2_32.lib`、`dbghelp.lib` 等 Windows SDK 库；目标测试还因 crates.io Schannel TLS 错误无法下载 `tempfile`。
 
 真实 Chromix 原始运行时检查已在 scratch 完成，命令等价于：
 
