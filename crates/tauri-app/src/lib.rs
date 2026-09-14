@@ -16,7 +16,7 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 use mcp_server::activity::ActivityLog;
-use multizen_core::AppSettings;
+use multizen_core::{AppSettings, BrowserEngine};
 use settings_store::{default_settings_path, SettingsStore};
 use tauri::{Emitter, Manager};
 use tokio::sync::Mutex;
@@ -79,25 +79,26 @@ fn resolve_paths(app: &tauri::AppHandle) -> (PathBuf, PathBuf, PathBuf, PathBuf)
 /// Fallback browser binary path when settings has none. Looks for
 /// `MULTIZEN_BROWSER_BINARY` env var first, then a platform default. The
 /// launcher will surface the real error if the binary is missing.
-fn default_browser_binary() -> PathBuf {
+fn default_browser_binary(engine: BrowserEngine) -> PathBuf {
     if let Ok(path) = std::env::var("MULTIZEN_BROWSER_BINARY") {
         return PathBuf::from(path);
     }
+    let is_chromix = matches!(engine, BrowserEngine::Chromix);
     #[cfg(target_os = "windows")]
     {
-        PathBuf::from("cloakbrowser.exe")
+        return PathBuf::from(if is_chromix { "chrome.exe" } else { "cloakbrowser.exe" });
     }
     #[cfg(target_os = "macos")]
     {
-        PathBuf::from("/Applications/CloakBrowser.app/Contents/MacOS/CloakBrowser")
+        return if is_chromix {
+            PathBuf::from("/Applications/Chromix.app/Contents/MacOS/Chromix")
+        } else {
+            PathBuf::from("/Applications/CloakBrowser.app/Contents/MacOS/CloakBrowser")
+        };
     }
-    #[cfg(target_os = "linux")]
+    #[cfg(any(target_os = "linux", not(any(target_os = "windows", target_os = "macos"))))]
     {
-        PathBuf::from("cloakbrowser")
-    }
-    #[cfg(not(any(target_os = "windows", target_os = "macos", target_os = "linux")))]
-    {
-        PathBuf::from("cloakbrowser")
+        PathBuf::from(if is_chromix { "chrome" } else { "cloakbrowser" })
     }
 }
 
@@ -127,7 +128,7 @@ fn build_app_state(app: &tauri::AppHandle) -> (AppState, PathBuf) {
         .as_ref()
         .filter(|s| !s.trim().is_empty())
         .map(PathBuf::from)
-        .unwrap_or_else(default_browser_binary);
+        .unwrap_or_else(|| default_browser_binary(engine));
     // Set up the companion extension (injects "Add to Cloaksession" button on
     // Chrome Web Store pages). Files are embedded at compile time and
     // written to the data dir on startup so they survive across launches.

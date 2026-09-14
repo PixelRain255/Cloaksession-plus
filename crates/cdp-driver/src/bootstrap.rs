@@ -11,11 +11,9 @@ pub async fn bootstrap_targets(
     engine: BrowserEngine,
     webrtc_spoof_ip: Option<&str>,
 ) -> Result<()> {
-    // C1: document the existing correct behavior. For CloakBrowser, only
-    // the locale evaluate runs below (webrtc/preload are gated to CFT), and
-    // CloakBrowser relies on launch-time `--fingerprint-*` flags (P2.5)
-    // rather than bootstrap emulation. Log it so integrators understand why
-    // bootstrap is a no-op for CloakBrowser.
+    // CloakBrowser relies on launch-time `--fingerprint-*` flags. Standard
+    // Chromium engines (CFT and Chromix) use the CDP preload below for the
+    // subset of fingerprint fields that CDP can override.
     if engine == BrowserEngine::Cloakbrowser {
         tracing::warn!(
             engine = "cloakbrowser",
@@ -31,7 +29,7 @@ pub async fn bootstrap_targets(
         .map_err(|e| multizen_core::MultizenError::Cdp(format!("pages: {e}")))?;
     for page in pages {
         // WebRTC (CFT + proxy only)
-        if engine == BrowserEngine::Cft && webrtc_spoof_ip.is_some() {
+        if matches!(engine, BrowserEngine::Cft | BrowserEngine::Chromix) && webrtc_spoof_ip.is_some() {
             let script = match webrtc_spoof_ip {
                 Some(ip) => build_webrtc_spoof_script(ip),
                 None => build_webrtc_block_script().to_string(),
@@ -42,7 +40,7 @@ pub async fn bootstrap_targets(
         // Fingerprint preload (CFT only). Register it for every future
         // document and also evaluate it in the current document so the first
         // already-open tab is updated immediately.
-        if engine == BrowserEngine::Cft {
+        if matches!(engine, BrowserEngine::Cft | BrowserEngine::Chromix) {
             let preload = build_fingerprint_preload_script(fp);
             page.evaluate_on_new_document(preload.clone())
                 .await

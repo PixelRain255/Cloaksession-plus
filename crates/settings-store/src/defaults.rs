@@ -1,6 +1,6 @@
 use std::path::{Path, PathBuf};
 
-use multizen_core::{AppSettings, BrowserEngine, Result};
+use multizen_core::{normalize_browser_binary_path, AppSettings, BrowserEngine, Result};
 use serde::Deserialize;
 
 #[derive(Debug, Default, Deserialize)]
@@ -53,9 +53,17 @@ impl SettingsStore {
         merged.browser_engine = match raw.browser_engine.as_deref() {
             Some("cft") => BrowserEngine::Cft,
             Some("cloakbrowser") => BrowserEngine::Cloakbrowser,
+            Some("chromix") => BrowserEngine::Chromix,
             _ => BrowserEngine::default(),
         };
-        merged.browser_binary_path = raw.browser_binary_path.filter(|s| !s.trim().is_empty());
+        merged.browser_binary_path = raw
+            .browser_binary_path
+            .filter(|s| !s.trim().is_empty())
+            .map(|s| {
+                normalize_browser_binary_path(s.trim())
+                    .to_string_lossy()
+                    .to_string()
+            });
         merged.skip_browser_download = raw.skip_browser_download.unwrap_or(false);
         merged.auto_update = raw.auto_update.unwrap_or(true);
         merged.usage_reporting = raw.usage_reporting.unwrap_or(false);
@@ -63,7 +71,18 @@ impl SettingsStore {
         Ok(merged)
     }
 
-    pub fn update(&mut self, patch: AppSettings) -> Result<AppSettings> {
+    pub fn update(&mut self, mut patch: AppSettings) -> Result<AppSettings> {
+        if let Some(ref path_str) = patch.browser_binary_path {
+            if !path_str.trim().is_empty() {
+                patch.browser_binary_path = Some(
+                    normalize_browser_binary_path(path_str.trim())
+                        .to_string_lossy()
+                        .to_string(),
+                );
+            } else {
+                patch.browser_binary_path = None;
+            }
+        }
         let json = serde_json::to_string_pretty(&patch)?;
         std::fs::write(&self.json_path, json)?;
         self.cache = Some(patch.clone());

@@ -49,3 +49,9 @@ fn cloak_allows_on_cft_engine() {
     // CFT engine ignores cloak restrictions
     assert!(cloak_allows_domain("Runtime", BrowserEngine::Cft));
 }
+
+#[test]
+fn chromix_uses_standard_chromium_cdp_policy() {
+    assert!(cloak_allows_domain("Runtime", BrowserEngine::Chromix));
+    assert!(cloak_allows_domain("Network", BrowserEngine::Chromix));
+}

@@ -2,7 +2,10 @@ use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU16, Ordering};
 use std::sync::Arc;
 
-use multizen_core::{BrowserEngine, LaunchedProfile, MultizenError, Result, UpdateProfileInput};
+use multizen_core::{
+    normalize_browser_binary_path, BrowserEngine, LaunchedProfile, MultizenError, Result,
+    UpdateProfileInput,
+};
 use profile_manager::ProfileManager;
 use tokio::process::{Child, Command};
 
@@ -56,6 +59,9 @@ impl BrowserLauncher {
         engine: BrowserEngine,
         companion_dir: Option<&Path>,
     ) -> Result<LaunchedProfile> {
+        let normalized_binary = normalize_browser_binary_path(binary_path);
+        let binary_path = normalized_binary.as_path();
+
         // 1. Idempotent: if already running, return the existing endpoint info.
         if self.registry.contains(profile_id).await {
             return self
@@ -89,6 +95,9 @@ impl BrowserLauncher {
                 .join("engines")
                 .join("cloakbrowser"),
             BrowserEngine::Cft => PathBuf::from(&profile.data_dir),
+            BrowserEngine::Chromix => PathBuf::from(&profile.data_dir)
+                .join("engines")
+                .join("chromix"),
         };
         std::fs::create_dir_all(&browser_data_dir)
             .map_err(|e| MultizenError::Launch(format!("data_dir: {e}")))?;

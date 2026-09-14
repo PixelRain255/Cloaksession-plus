@@ -91,6 +91,16 @@ fn cft_engine_adds_user_agent_and_test_type() {
 }
 
 #[test]
+fn chromix_engine_uses_standard_chromium_args_without_cloak_flags() {
+    let p = base_profile();
+    let args = build_spawn_args(&p, BrowserEngine::Chromix, 9222, "/tmp/p1/engines/chromix", None, None, None);
+    assert!(args.iter().any(|a| a == "--user-data-dir=/tmp/p1/engines/chromix"));
+    assert!(args.iter().any(|a| a.starts_with("--user-agent=")));
+    assert!(args.iter().any(|a| a == "--test-type=gpu"));
+    assert!(args.iter().all(|a| !a.starts_with("--fingerprint-")));
+}
+
+#[test]
 fn cft_engine_preserves_custom_user_agent() {
     let mut p = base_profile();
     p.fingerprint.user_agent = "Custom/99.1 test-agent".into();

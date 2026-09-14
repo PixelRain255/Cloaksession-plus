@@ -158,7 +158,7 @@ pub fn build_spawn_args(
                 args.push(format!("--fingerprint-location={lat},{lon}"));
             }
         }
-        BrowserEngine::Cft => {
+        BrowserEngine::Cft | BrowserEngine::Chromix => {
             args.push(format!("--user-agent={}", fp.user_agent));
             args.push("--test-type=gpu".to_string());
         }

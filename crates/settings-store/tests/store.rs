@@ -65,3 +65,48 @@ fn load_clears_empty_browser_binary_path() {
     let s = store.load().unwrap();
     assert_eq!(s.browser_binary_path, None);
 }
+
+#[test]
+fn load_and_save_chromix_engine() {
+    let dir = TempDir::new().unwrap();
+    let path = default_settings_path(dir.path());
+    std::fs::write(&path, r#"{"mcpHttpPort": 7777, "browserEngine": "chromix"}"#).unwrap();
+    let mut store = SettingsStore::new(&path);
+    let s = store.load().unwrap();
+    assert_eq!(s.browser_engine, BrowserEngine::Chromix);
+
+    let updated = store
+        .update(AppSettings {
+            browser_engine: BrowserEngine::Chromix,
+            ..Default::default()
+        })
+        .unwrap();
+    assert_eq!(updated.browser_engine, BrowserEngine::Chromix);
+
+    let mut store2 = SettingsStore::new(&path);
+    let reloaded = store2.load().unwrap();
+    assert_eq!(reloaded.browser_engine, BrowserEngine::Chromix);
+}
+
+#[test]
+fn load_normalizes_directory_browser_binary_path() {
+    let dir = TempDir::new().unwrap();
+    let chromix_dir = dir.path().join("chromix-win-x64");
+    std::fs::create_dir_all(&chromix_dir).unwrap();
+    let chrome_exe = chromix_dir.join("chrome.exe");
+    std::fs::write(&chrome_exe, b"").unwrap();
+
+    let path = default_settings_path(dir.path());
+    let raw_json = format!(
+        r#"{{"mcpHttpPort": 7777, "browserBinaryPath": {:?}}}"#,
+        chromix_dir.to_string_lossy()
+    );
+    std::fs::write(&path, raw_json).unwrap();
+
+    let mut store = SettingsStore::new(&path);
+    let s = store.load().unwrap();
+    assert_eq!(
+        s.browser_binary_path,
+        Some(chrome_exe.to_string_lossy().to_string())
+    );
+}
