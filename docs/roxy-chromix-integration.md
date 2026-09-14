@@ -40,10 +40,10 @@ Chromix 使用标准 Chromium 启动参数、独立 Profile 用户数据目录�
 - [x] 主 Profile 工作台：左侧文字导航、紧凑列表、搜索、状态/标签筛选、全选和批量启动/停止。
 - [x] Profile 编辑入口继续复用现有后端持久化，保留代理、指纹、启动页和扩展组件。
 - [x] Settings、MCP 页面挂载统一的 Roxy 风格工作区样式入口。
-- [x] Chromix Rust 引擎变体、路径归一化、标准 CDP bootstrap 与安全策略代码已实现；Rust 命令因本机没有 Cargo 尚未执行。
-- [x] Chromix 原始运行时 smoke：在 scratch 中用 release `chrome.exe` 启动 headless CDP，`/json/version` 和 `/json/list` 成功，进程已关闭。
-- [ ] Windows x64 通过 Tauri Profile 流程的真实启动、CDP 基础检查和正常关闭：需要 Cargo 构建应用及 Profile 数据库驱动；原始 Chromix CDP smoke 已通过。
-- [ ] 完整 UI bundle：当前机器只有 Node `v16.14.0`，Vite 6 要求 Node 18+，仓库规范要求 Node 22；`npx tsc -b` 已通过，`vite build` 尚未能在本机执行。
+- [x] Chromix Rust 引擎变体、路径归一化、标准 CDP bootstrap 与安全策略代码已实现；scratch Rust `1.98.1` 已安装并完成静态枚举核对。
+- [x] Chromix 原始运行时 smoke：release ZIP SHA-256 校验通过；`chrome.exe` headless 启动后报告 `Chrome/152.0.7977.82`、CDP protocol `1.3`、目标页可读，关闭后进程数为 0。
+- [ ] Windows x64 通过 Tauri Profile 流程的真实启动、CDP 基础检查和正常关闭：应用尚未能由 Cargo 构建，当前阻塞是缺少 Windows MSVC `link.exe`；原始 Chromix CDP smoke 已通过。
+- [ ] 完整 UI bundle：系统 Node `v16.14.0` 无法运行 Vite 6；校验完整的 Node 22 便携二进制在本机执行时异常退出；`npx tsc -b` 已通过，`vite build` 尚未完成。
 
 ## 验证命令
 
@@ -56,11 +56,21 @@ cargo check --workspace
 cargo test --workspace
 ```
 
-前端当前已在本机执行 `npx tsc -b` 并通过。`npm run build` 在 Vite 启动阶段因 Node 16 报错：`node:fs/promises` 不提供 Vite 6 使用的导出；这属于运行环境版本阻塞，不是 TypeScript 错误。Rust 检查命令在启动前因 `cargo` 不在 PATH 且未找到 `rustup`/`rustc` 失败。
+前端当前已在本机执行 `npx tsc -b` 并通过。`npm --prefix crates/tauri-app/ui run build` 已实际执行，但 Vite 启动阶段因 Node 16 报错：`node:fs/promises` 不提供 Vite 6 使用的导出。尝试的 Node 22 便携包通过官方 SHA-256 校验，但 `node.exe --version` 以系统异常码 `-1073741819` 退出。Rust 使用 scratch Cargo `1.98.1` 实际执行过；`cargo check --workspace` 在依赖 build script 链接阶段因 `link.exe` 不存在失败。
 
-真实 Chromix 检查建议在解压目录准备后执行：
+真实 Chromix 原始运行时检查已在 scratch 完成，命令等价于：
 
 ```powershell
+chrome.exe --headless=new --disable-gpu --remote-debugging-port=9334 --user-data-dir=<scratch> data:text/html,<title>chromix-smoke</title><p>ok</p>
+Invoke-WebRequest http://127.0.0.1:9334/json/version
+Invoke-WebRequest http://127.0.0.1:9334/json/list
+```
+
+实际结果：`browser=Chrome/152.0.7977.82`、`protocol=1.3`、`targetCount=1`、页面标题包含 `chromix-smoke`，结束后 `remainingChromixProcesses=0`。完整 Tauri 流程仍需在安装 Visual Studio Build Tools/MSVC linker 后执行：
+
+```powershell
+$env:RUN_CDP_INTEGRATION = "1"
+$env:MULTIZEN_TEST_BINARY = "D:\Chromix\152.0.7977.82\chrome.exe"
 cargo test -p browser-launcher --test driver -- --ignored
 cargo test -p cdp-driver --test integration -- --ignored
 ```
@@ -90,7 +100,7 @@ cargo test -p cdp-driver --test integration -- --ignored
 | Roxy 风格 Profile 工作台、搜索筛选、批量启动/停止、响应式侧栏 | `b566661` | 已推送 `origin/main` |
 | Chromix 引擎配置、路径归一化、标准 CDP bootstrap 与安全策略 | `d9fb710` | 已推送 `origin/main` |
 | Settings/MCP/活动日志统一页面样式、审查修正与集成文档 | `f288288` | 已推送 `origin/main` |
-| 全量构建、测试与真实 Chromix 验证 | 原始 Chromix smoke 已通过；Tauri/Cargo 验证待环境 | 待完成 |
+| 全量构建、测试与真实 Chromix 验证 | 原始 Chromix smoke 已通过；UI/Rust 完整构建待 Node 22 与 MSVC linker 环境 | 待完成 |
 
 ## 变更边界
 
