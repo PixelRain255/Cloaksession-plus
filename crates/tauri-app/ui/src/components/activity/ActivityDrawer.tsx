@@ -18,7 +18,7 @@ export function ActivityDrawer({ open, events, profiles, onToggle }: Props): JSX
 
   return (
     <div
-      className="flex-shrink-0 flex flex-col overflow-hidden"
+      className="roxy-activity-drawer flex-shrink-0 flex flex-col overflow-hidden"
       style={{
         height: open ? 240 : 36,
         background: "rgba(10,11,15,0.85)",

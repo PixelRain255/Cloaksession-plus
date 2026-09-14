@@ -89,7 +89,7 @@ cargo test -p cdp-driver --test integration -- --ignored
 | --- | --- | --- |
 | Roxy 风格 Profile 工作台、搜索筛选、批量启动/停止、响应式侧栏 | `b566661` | 已推送 `origin/main` |
 | Chromix 引擎配置、路径归一化、标准 CDP bootstrap 与安全策略 | `d9fb710` | 已推送 `origin/main` |
-| Settings/MCP 统一页面样式、审查修正与集成文档 | 待提交 | 待完成 |
+| Settings/MCP/活动日志统一页面样式、审查修正与集成文档 | `f288288` | 已推送 `origin/main` |
 | 全量构建、测试与真实 Chromix 验证 | 原始 Chromix smoke 已通过；Tauri/Cargo 验证待环境 | 待完成 |
 
 ## 变更边界
